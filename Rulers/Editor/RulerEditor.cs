@@ -27,6 +27,7 @@ namespace Loqheart.Utility
         GUIContent rulerColorGC;
         GUIContent deleteRulerGC;
         GUIContent frameGC;
+        GUIContent addRulerGC;
 
 
         // Editor Window UI
@@ -78,8 +79,6 @@ namespace Loqheart.Utility
         void OnEnable()
         {
             currentScene = EditorSceneManager.GetActiveScene();
-            CheckInit();
-
             SceneView.onSceneGUIDelegate += OnSceneGUI;
             titleContent = new GUIContent("Rulers");
         }
@@ -109,7 +108,8 @@ namespace Loqheart.Utility
                 duplicateRulerGC = new GUIContent("*", "duplicate ruler");
                 rulerColorGC = new GUIContent("", "ruler color");
                 deleteRulerGC = new GUIContent("x", "delete ruler");
-                frameGC = new GUIContent("/", "frame");
+                frameGC = new GUIContent("/", "frame selected");
+                addRulerGC = new GUIContent("+", "add empty ruler,\n or will create from 2 selected objects");
             }
             else
             {
@@ -120,6 +120,7 @@ namespace Loqheart.Utility
                 rulerColorGC = new GUIContent(" ");
                 deleteRulerGC = new GUIContent("x");
                 frameGC = new GUIContent("/");
+                addRulerGC = new GUIContent("+");
             }
         }
 
@@ -364,10 +365,15 @@ namespace Loqheart.Utility
                 MarkDirty();
             }
 
-            if (GUILayout.Button(new GUIContent("+", "add ruler"), miniButtonStyle))
+            if (GUILayout.Button(addRulerGC, miniButtonStyle))
             {
                 var r = new Ruler();
                 r.color = data.rulerColor;
+                if (Selection.gameObjects.Length == 2)
+                {
+                    r.a = Selection.gameObjects[0].transform;
+                    r.b = Selection.gameObjects[1].transform;
+                }
                 data.Add(r);
                 MarkDirty();
             }
