@@ -24,7 +24,6 @@ namespace Loqheart.Utility
         GUIContent clearFilterGC;
         GUIContent visibilityGC;
         GUIContent duplicateRulerGC;
-        GUIContent rulerColorGC;
         GUIContent deleteRulerGC;
         GUIContent frameGC;
         GUIContent addRulerGC;
@@ -106,7 +105,6 @@ namespace Loqheart.Utility
                 clearFilterGC = new GUIContent("x", "clear filter");
                 visibilityGC = new GUIContent("", "visibility");
                 duplicateRulerGC = new GUIContent("*", "duplicate ruler");
-                rulerColorGC = new GUIContent("", "ruler color");
                 deleteRulerGC = new GUIContent("x", "delete ruler");
                 frameGC = new GUIContent("/", "frame selected");
                 addRulerGC = new GUIContent("+", "add empty ruler,\n or will create from 2 selected objects");
@@ -117,7 +115,6 @@ namespace Loqheart.Utility
                 clearFilterGC = new GUIContent("x");
                 visibilityGC = new GUIContent("");
                 duplicateRulerGC = new GUIContent("*");
-                rulerColorGC = new GUIContent(" ");
                 deleteRulerGC = new GUIContent("x");
                 frameGC = new GUIContent("/");
                 addRulerGC = new GUIContent("+");
@@ -306,7 +303,7 @@ namespace Loqheart.Utility
                     duplicateRulerIndex = i;
                 }
 
-                CheckDirty(ref r.color, EditorGUILayout.ColorField(rulerColorGC, r.color, GUILayout.Width(50)));
+                CheckDirty(ref r.color, EditorGUILayout.ColorField(r.color, GUILayout.Width(50)));
                 EditorGUILayout.LabelField(r.delta.magnitude.ToString("0.00"), boldStyle);
 
                 if (GUILayout.Button(deleteRulerGC, miniButtonStyle, GUILayout.Width(20)))
