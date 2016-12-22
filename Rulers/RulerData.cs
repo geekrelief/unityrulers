@@ -50,7 +50,7 @@ namespace Loqheart.Utility
         public bool showTooltips = false;
 
         public int fontSize = 20;
-        public Color fontColor = new Color(.8f, .8f, .8f);
+        public Color textColor = new Color(.8f, .8f, .8f);
         public Color rulerColor = new Color(1f, .75f, 0f);
         public int rulerThickness = 2;
 

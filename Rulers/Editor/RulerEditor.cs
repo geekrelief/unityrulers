@@ -48,8 +48,13 @@ namespace Loqheart.Utility
         Transform selectedTransform;
         Scene currentScene;
 
-        RulerData data;
+        // for ordered selection
+        HashSet<GameObject> selectionSet = new HashSet<GameObject>();
+        HashSet<GameObject> newSet = new HashSet<GameObject>();
+        HashSet<GameObject> deleteSet = new HashSet<GameObject>();
+        List<GameObject> selectionOrdered = new List<GameObject>();
 
+        RulerData data;
 
         [MenuItem("Window/Rulers")]
         public static void DisplayWindow()
@@ -67,12 +72,41 @@ namespace Loqheart.Utility
                 data = null;
                 CheckInit();
             }
+
+
+        }
+
+        private void OnSelectionChange()
+        {
+            newSet.Clear();
+            newSet.UnionWith(Selection.gameObjects);
+
+            deleteSet.Clear();
+            deleteSet.UnionWith(selectionSet);
+            deleteSet.ExceptWith(newSet);
+            foreach (var g in deleteSet)
+            {
+                selectionSet.Remove(g);
+                selectionOrdered.Remove(g);
+            }
+
+            newSet.ExceptWith(selectionSet);
+            foreach (var g in newSet)
+            {
+                selectionSet.Add(g);
+                selectionOrdered.Add(g);
+            }
         }
 
         private void OnDestroy()
         {
             SceneView.onSceneGUIDelegate -= OnSceneGUI;
             data = null;
+
+            selectionSet = null;
+            newSet = null;
+            deleteSet = null;
+            selectionOrdered = null;
         }
 
         void OnEnable()
@@ -80,6 +114,10 @@ namespace Loqheart.Utility
             currentScene = EditorSceneManager.GetActiveScene();
             SceneView.onSceneGUIDelegate += OnSceneGUI;
             titleContent = new GUIContent("Rulers");
+            selectionSet = new HashSet<GameObject>();
+            newSet = new HashSet<GameObject>();
+            deleteSet = new HashSet<GameObject>();
+            selectionOrdered = new List<GameObject>();
         }
 
         void ResetData()
@@ -151,7 +189,7 @@ namespace Loqheart.Utility
                 boldStyle = new GUIStyle(EditorStyles.boldLabel);
 
                 groupFoldoutStyle = new GUIStyle(EditorStyles.foldout);
-                groupFoldoutStyle.fontStyle = FontStyle.BoldAndItalic;
+                groupFoldoutStyle.fontStyle = FontStyle.Bold;
 
                 labelStyle.fontSize = 20;
                 labelStyle.normal.textColor = new Color(.8f, .8f, .8f);
@@ -202,6 +240,9 @@ namespace Loqheart.Utility
         void OnGUI()
         {
             CheckInit();
+
+            scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
+            EditorGUILayout.BeginVertical(GUI.skin.box);
             showSettings = EditorGUILayout.Foldout(showSettings, settingsStr, groupFoldoutStyle);
 
             if (showSettings)
@@ -223,8 +264,6 @@ namespace Loqheart.Utility
 
                 EditorGUILayout.EndHorizontal();
 
-                EditorGUILayout.BeginVertical(GUI.skin.box);
-
                 EditorGUILayout.LabelField("ruler thickness");
                 CheckDirty(ref data.rulerThickness, EditorGUILayout.IntSlider(data.rulerThickness, 1, 30));
 
@@ -236,10 +275,10 @@ namespace Loqheart.Utility
                 labelStyle.fontSize = data.fontSize;
 
                 EditorGUILayout.LabelField("text color");
-                CheckDirty(ref data.fontColor, EditorGUILayout.ColorField(data.fontColor));
-                labelStyle.normal.textColor = data.fontColor;
-                EditorGUILayout.EndVertical();
+                CheckDirty(ref data.textColor, EditorGUILayout.ColorField(data.textColor));
+                labelStyle.normal.textColor = data.textColor;
             }
+            EditorGUILayout.EndVertical();
 
             var toolbarSelection = GUILayout.Toolbar(-1, toolbarStrings, toolbarStyle);
             switch (toolbarSelection)
@@ -280,8 +319,6 @@ namespace Loqheart.Utility
 
             EditorGUILayout.EndHorizontal();
 
-            scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
-
             EditorGUILayout.BeginVertical();
             int removeRulerIndex = -1;
             int duplicateRulerIndex = -1;
@@ -304,8 +341,8 @@ namespace Loqheart.Utility
                 }
 
                 CheckDirty(ref r.color, EditorGUILayout.ColorField(r.color, GUILayout.Width(50)));
-                EditorGUILayout.LabelField(r.delta.magnitude.ToString("0.00"), boldStyle);
 
+                GUILayout.FlexibleSpace();
                 if (GUILayout.Button(deleteRulerGC, miniButtonStyle, GUILayout.Width(20)))
                 {
                     removeRulerIndex = i;
@@ -325,9 +362,11 @@ namespace Loqheart.Utility
                     r.a = aTransform;
                     MarkDirty();
                 }
-                EditorGUILayout.EndHorizontal();
+                //EditorGUILayout.EndHorizontal();
 
-                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField(r.delta.magnitude.ToString("0.00"), boldStyle, GUILayout.Width(40));
+
+                //EditorGUILayout.BeginHorizontal();
                 if (GUILayout.Button(frameGC, miniButtonStyle, GUILayout.Width(20)))
                 {
                     // search for objects
@@ -366,10 +405,14 @@ namespace Loqheart.Utility
             {
                 var r = new Ruler();
                 r.color = data.rulerColor;
-                if (Selection.gameObjects.Length == 2)
+                if (selectionOrdered.Count > 0)
                 {
-                    r.a = Selection.gameObjects[0].transform;
-                    r.b = Selection.gameObjects[1].transform;
+                    r.a = selectionOrdered[0].transform;
+                }
+
+                if (selectionOrdered.Count > 1)
+                {
+                    r.b = selectionOrdered[1].transform;
                 }
                 data.Add(r);
                 MarkDirty();
@@ -384,6 +427,7 @@ namespace Loqheart.Utility
         {
             CheckInit();
             Color oldColor = Handles.color;
+            var backgroundColor = GUI.backgroundColor;
             int controlId = 0;
             foreach (var r in data.rulers)
             {
@@ -415,6 +459,7 @@ namespace Loqheart.Utility
                     float mag = delta.magnitude;
                     var n = delta.normalized;
                     Handles.ArrowCap(controlId + 1, r.b.position - 1.14f * n, mag < 0.0001f ? Quaternion.identity : Quaternion.LookRotation(delta), 1f);
+                    GUI.backgroundColor = r.color;
                     Handles.Label(mag * 0.5f * n + r.a.position, mag.ToString("0.00"), labelStyle);
                 }
                 else
@@ -441,6 +486,7 @@ namespace Loqheart.Utility
             }
 
             Handles.color = oldColor;
+            GUI.backgroundColor = backgroundColor;
 
             SceneView.RepaintAll();
 
