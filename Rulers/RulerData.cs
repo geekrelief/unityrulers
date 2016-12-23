@@ -4,14 +4,34 @@ using UnityEngine;
 
 namespace Loqheart.Utility
 {
+    public enum RulerAngleMode
+    {
+        DirectionCosines,
+        PlaneProjection,
+        POV
+    }
+
+    public enum RulerExDataMode
+    {
+        None,
+        Distance,
+        Angle
+    }
+
     // Ruler editor creates rulers between transforms and displays an arrow from source to destination along with distance between them
     [Serializable]
     public class Ruler
     {
+        static Vector3 X = new Vector3(1, 0, 0);
+        static Vector3 Y = new Vector3(0, 1, 0);
+        static Vector3 Z = new Vector3(0, 0, 1);
+
         public bool isVisible = true;
         public Transform a;
         public Transform b;
         public Color color;
+        public Color textColor;
+        public RulerExDataMode exDataMode = RulerExDataMode.None;
 
         public Ruler()
         {
@@ -39,6 +59,49 @@ namespace Loqheart.Utility
                 }
             }
         }
+
+        public Vector3 GetAngles(RulerAngleMode mode)
+        {
+            var angles = Vector3.zero;
+            var unit = delta.normalized;
+            switch (mode)
+            {
+                case RulerAngleMode.DirectionCosines:
+                    angles.x = Mathf.Acos(Vector3.Dot(unit, X));
+                    angles.y = Mathf.Acos(Vector3.Dot(unit, Y));
+                    angles.z = Mathf.Acos(Vector3.Dot(unit, Z));
+                    angles = angles * Mathf.Rad2Deg;
+                    break;
+
+                case RulerAngleMode.PlaneProjection:
+                    var xy = new Vector3(unit.x, unit.y, 0f);
+                    angles.x = Mathf.Acos(Vector3.Dot(unit, xy));
+                    var yz = new Vector3(0f, unit.y, unit.z);
+                    angles.y = Mathf.Acos(Vector3.Dot(unit, yz));
+                    var xz = new Vector3(unit.x, 0f, unit.z);
+                    angles.z = Mathf.Acos(Vector3.Dot(unit, xz));
+                    angles = angles * Mathf.Rad2Deg;
+                    break;
+
+                case RulerAngleMode.POV:
+                    //angles = (Quaternion.Inverse(a.rotation) * Quaternion.LookRotation(unit, a.up)).eulerAngles;
+                    angles = (Quaternion.Inverse(a.rotation) * Quaternion.LookRotation(unit, b.up)).eulerAngles;
+                    if (angles.x > 180f)
+                    {
+                        angles.x -= 360f;
+                    }
+                    if (angles.y > 180f)
+                    {
+                        angles.y -= 360f;
+                    }
+                    if (angles.z > 180f)
+                    {
+                        angles.z -= 360f;
+                    }
+                    break;
+            }
+            return angles;
+        }
     }
 
     // a component to contain the data in the scene for the ruler editor
@@ -48,13 +111,16 @@ namespace Loqheart.Utility
         public Ruler[] rulers;
 
         public bool showTooltips = false;
+        public bool enableShortcuts = true;
 
-        public int fontSize = 20;
-        public Color textColor = new Color(.8f, .8f, .8f);
+        public int fontSize = 14;
+        public Color textColor = new Color(.1f, .1f, .1f);
         public Color rulerColor = new Color(1f, .75f, 0f);
         public int rulerThickness = 2;
 
         public Transform filterTransform;
+
+        public RulerAngleMode angleMode = RulerAngleMode.DirectionCosines;
 
         public RulerData()
         {

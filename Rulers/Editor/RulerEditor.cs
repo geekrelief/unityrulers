@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -20,10 +21,16 @@ namespace Loqheart.Utility
     {
         string settingsStr = "Settings";
         string showTooltipsStr = "Tooltips";
+        string enableShortcutsStr = "Shortcuts";
         GUIContent resetDataGC;
         GUIContent clearFilterGC;
+        GUIContent angleModeGC;
         GUIContent visibilityGC;
         GUIContent duplicateRulerGC;
+
+        GUIContent exDataDistanceGC;
+        GUIContent exDataAngleGC;
+
         GUIContent deleteRulerGC;
         GUIContent frameGC;
         GUIContent addRulerGC;
@@ -40,8 +47,11 @@ namespace Loqheart.Utility
 
         GUIStyle toggleStyle;
 
-        // Scene UI
         GUIStyle labelStyle = new GUIStyle();
+
+
+        GUILayoutOption colorFieldWidth = GUILayout.Width(50);
+        GUILayoutOption exDataWidth = GUILayout.Width(75);
 
         bool showSettings = false;
         Vector2 scrollPos = Vector2.zero;
@@ -70,10 +80,12 @@ namespace Loqheart.Utility
             {
                 currentScene = EditorSceneManager.GetActiveScene();
                 data = null;
+                selectionSet = null;
+                newSet = null;
+                deleteSet = null;
+                selectionOrdered = null;
                 CheckInit();
             }
-
-
         }
 
         private void OnSelectionChange()
@@ -141,18 +153,24 @@ namespace Loqheart.Utility
             {
                 resetDataGC = new GUIContent("Reset Data", "Removes the rulers in the scene and resets settings.");
                 clearFilterGC = new GUIContent("x", "clear filter");
+                angleModeGC = new GUIContent("angle mode", "display angle information of ruler depending on mode");
                 visibilityGC = new GUIContent("", "visibility");
-                duplicateRulerGC = new GUIContent("*", "duplicate ruler");
+                duplicateRulerGC = new GUIContent("★", "duplicate ruler");
+                exDataDistanceGC = new GUIContent("Δ", "show component distances");
+                exDataAngleGC = new GUIContent("∠", "show component angles");
                 deleteRulerGC = new GUIContent("x", "delete ruler");
                 frameGC = new GUIContent("/", "frame selected");
-                addRulerGC = new GUIContent("+", "add empty ruler,\n or will create from 2 selected objects");
+                addRulerGC = new GUIContent("+", "add empty ruler,\n or will create from 2 selected objects\n Shortcut: Ctrl + Shift + R");
             }
             else
             {
                 resetDataGC = new GUIContent("Reset Data");
                 clearFilterGC = new GUIContent("x");
+                angleModeGC = new GUIContent("angle mode", "");
                 visibilityGC = new GUIContent("");
-                duplicateRulerGC = new GUIContent("*");
+                duplicateRulerGC = new GUIContent("★");
+                exDataDistanceGC = new GUIContent("Δ");
+                exDataAngleGC = new GUIContent("∠");
                 deleteRulerGC = new GUIContent("x");
                 frameGC = new GUIContent("/");
                 addRulerGC = new GUIContent("+");
@@ -191,8 +209,14 @@ namespace Loqheart.Utility
                 groupFoldoutStyle = new GUIStyle(EditorStyles.foldout);
                 groupFoldoutStyle.fontStyle = FontStyle.Bold;
 
-                labelStyle.fontSize = 20;
+                labelStyle.fontSize = 14;
+                labelStyle.fontStyle = FontStyle.Bold;
                 labelStyle.normal.textColor = new Color(.8f, .8f, .8f);
+                var backtexture = new Texture2D(1, 1);
+                backtexture.wrapMode = TextureWrapMode.Repeat;
+                backtexture.SetPixel(0, 0, new Color(0f, 0f, 0f, 0f));
+                backtexture.Apply();
+                labelStyle.normal.background = backtexture;
 
                 toolbarStyle = new GUIStyle(EditorStyles.toolbarButton);
                 toolbarStyle.fontSize = 11;
@@ -205,6 +229,7 @@ namespace Loqheart.Utility
             }
         }
 
+        #region Dirty
         void MarkDirty()
         {
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
@@ -237,11 +262,23 @@ namespace Loqheart.Utility
             }
         }
 
+        void CheckDirty(ref RulerAngleMode oldVal, RulerAngleMode newVal)
+        {
+            if (newVal != oldVal)
+            {
+                oldVal = newVal;
+                MarkDirty();
+            }
+        }
+        #endregion Dirty
+
         void OnGUI()
         {
             CheckInit();
 
             scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
+
+            #region settings
             EditorGUILayout.BeginVertical(GUI.skin.box);
             showSettings = EditorGUILayout.Foldout(showSettings, settingsStr, groupFoldoutStyle);
 
@@ -257,7 +294,17 @@ namespace Loqheart.Utility
                     MarkDirty();
                 }
 
-                if (GUILayout.Button(resetDataGC, GUILayout.Width(150)))
+                EditorGUILayout.LabelField(enableShortcutsStr, GUILayout.Width(60));
+                var enableShortcuts = EditorGUILayout.Toggle(data.enableShortcuts, GUILayout.Width(50));
+                if (enableShortcuts != data.enableShortcuts)
+                {
+                    data.enableShortcuts = enableShortcuts;
+                    MarkDirty();
+                }
+
+                GUILayout.FlexibleSpace();
+
+                if (GUILayout.Button(resetDataGC, GUILayout.Width(100)))
                 {
                     ResetData();
                 }
@@ -277,9 +324,15 @@ namespace Loqheart.Utility
                 EditorGUILayout.LabelField("text color");
                 CheckDirty(ref data.textColor, EditorGUILayout.ColorField(data.textColor));
                 labelStyle.normal.textColor = data.textColor;
-            }
-            EditorGUILayout.EndVertical();
 
+                EditorGUILayout.LabelField(angleModeGC);
+                CheckDirty(ref data.angleMode, (RulerAngleMode)EditorGUILayout.EnumPopup(data.angleMode));
+            }
+
+            EditorGUILayout.EndVertical();
+            #endregion settings
+
+            #region filter
             var toolbarSelection = GUILayout.Toolbar(-1, toolbarStrings, toolbarStyle);
             switch (toolbarSelection)
             {
@@ -318,6 +371,7 @@ namespace Loqheart.Utility
             }
 
             EditorGUILayout.EndHorizontal();
+            #endregion filter
 
             EditorGUILayout.BeginVertical();
             int removeRulerIndex = -1;
@@ -340,7 +394,60 @@ namespace Loqheart.Utility
                     duplicateRulerIndex = i;
                 }
 
-                CheckDirty(ref r.color, EditorGUILayout.ColorField(r.color, GUILayout.Width(50)));
+                CheckDirty(ref r.color, EditorGUILayout.ColorField(r.color, colorFieldWidth));
+                CheckDirty(ref r.textColor, EditorGUILayout.ColorField(r.textColor, colorFieldWidth));
+
+                var isSetExDataDistance = GUILayout.Toggle(RulerExDataMode.Distance == r.exDataMode, exDataDistanceGC, "Button");
+                if (isSetExDataDistance && r.exDataMode != RulerExDataMode.Distance)
+                {
+                    r.exDataMode = RulerExDataMode.Distance;
+                    MarkDirty();
+                }
+
+                var isSetExDataAngle = GUILayout.Toggle(RulerExDataMode.Angle == r.exDataMode, exDataAngleGC, "Button");
+                if (isSetExDataAngle && r.exDataMode != RulerExDataMode.Angle)
+                {
+                    r.exDataMode = RulerExDataMode.Angle;
+                    MarkDirty();
+                }
+
+                if (!isSetExDataDistance && !isSetExDataAngle && r.exDataMode != RulerExDataMode.None)
+                {
+                    r.exDataMode = RulerExDataMode.None;
+                    MarkDirty();
+                }
+
+                switch (r.exDataMode)
+                {
+                    case RulerExDataMode.Distance:
+                        var delta = r.delta;
+                        EditorGUILayout.LabelField("Δx " + delta.x.ToString("0.00"), boldStyle, exDataWidth);
+                        EditorGUILayout.LabelField("Δy " + delta.y.ToString("0.00"), boldStyle, exDataWidth);
+                        EditorGUILayout.LabelField("Δz" + delta.z.ToString("0.00"), boldStyle, exDataWidth);
+                        break;
+                    case RulerExDataMode.Angle:
+                        var angles = r.GetAngles(data.angleMode);
+                        switch (data.angleMode)
+                        {
+                            case RulerAngleMode.DirectionCosines:
+                                EditorGUILayout.LabelField("∠α " + angles.x.ToString("0.00"), boldStyle, exDataWidth);
+                                EditorGUILayout.LabelField("∠β " + angles.y.ToString("0.00"), boldStyle, exDataWidth);
+                                EditorGUILayout.LabelField("∠γ " + angles.z.ToString("0.00"), boldStyle, exDataWidth);
+
+                                break;
+                            case RulerAngleMode.PlaneProjection:
+                                EditorGUILayout.LabelField("∠xy " + angles.x.ToString("0.00"), boldStyle, exDataWidth);
+                                EditorGUILayout.LabelField("∠yz " + angles.y.ToString("0.00"), boldStyle, exDataWidth);
+                                EditorGUILayout.LabelField("∠xz " + angles.z.ToString("0.00"), boldStyle, exDataWidth);
+                                break;
+                            case RulerAngleMode.POV:
+                                EditorGUILayout.LabelField("∠p " + angles.x.ToString("0.00"), boldStyle, exDataWidth);
+                                EditorGUILayout.LabelField("∠y " + angles.y.ToString("0.00"), boldStyle, exDataWidth);
+                                EditorGUILayout.LabelField("∠r " + angles.z.ToString("0.00"), boldStyle, exDataWidth);
+                                break;
+                        }
+                        break;
+                }
 
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(deleteRulerGC, miniButtonStyle, GUILayout.Width(20)))
@@ -389,6 +496,7 @@ namespace Loqheart.Utility
                 var ruler = data.rulers[duplicateRulerIndex];
                 var r = new Ruler();
                 r.color = ruler.color;
+                r.textColor = ruler.textColor;
                 r.a = ruler.a;
                 r.b = ruler.b;
                 data.Add(r, duplicateRulerIndex + 1);
@@ -403,31 +511,55 @@ namespace Loqheart.Utility
 
             if (GUILayout.Button(addRulerGC, miniButtonStyle))
             {
-                var r = new Ruler();
-                r.color = data.rulerColor;
-                if (selectionOrdered.Count > 0)
-                {
-                    r.a = selectionOrdered[0].transform;
-                }
-
-                if (selectionOrdered.Count > 1)
-                {
-                    r.b = selectionOrdered[1].transform;
-                }
-                data.Add(r);
-                MarkDirty();
+                AddRuler();
             }
 
             EditorGUILayout.EndVertical();
 
             EditorGUILayout.EndScrollView();
+
+            CheckShortcuts();
+        }
+
+        void AddRuler()
+        {
+            var r = new Ruler();
+            r.color = data.rulerColor;
+            r.textColor = data.textColor;
+            if (selectionOrdered.Count > 0)
+            {
+                r.a = selectionOrdered[0].transform;
+            }
+
+            if (selectionOrdered.Count > 1)
+            {
+                r.b = selectionOrdered[1].transform;
+            }
+            data.Add(r);
+            MarkDirty();
+        }
+
+        void CheckShortcuts()
+        {
+            if (!data.enableShortcuts)
+            {
+                return;
+            }
+
+            Event e = Event.current;
+            if (e.shift && e.control && e.keyCode == KeyCode.R && e.type == EventType.KeyUp)
+            {
+                AddRuler();
+            }
         }
 
         void OnSceneGUI(SceneView sceneView)
         {
             CheckInit();
+
+            CheckShortcuts();
+
             Color oldColor = Handles.color;
-            var backgroundColor = GUI.backgroundColor;
             int controlId = 0;
             foreach (var r in data.rulers)
             {
@@ -459,8 +591,58 @@ namespace Loqheart.Utility
                     float mag = delta.magnitude;
                     var n = delta.normalized;
                     Handles.ArrowCap(controlId + 1, r.b.position - 1.14f * n, mag < 0.0001f ? Quaternion.identity : Quaternion.LookRotation(delta), 1f);
-                    GUI.backgroundColor = r.color;
-                    Handles.Label(mag * 0.5f * n + r.a.position, mag.ToString("0.00"), labelStyle);
+
+                    labelStyle.normal.textColor = r.textColor;
+                    labelStyle.normal.background.SetPixel(0, 0, new Color(r.color.r, r.color.g, r.color.b, 0.5f));
+                    labelStyle.normal.background.Apply();
+
+                    var labelSB = new StringBuilder(64);
+                    labelSB.Append(mag.ToString("0.00"));
+
+                    switch (r.exDataMode)
+                    {
+                        case RulerExDataMode.Distance:
+                            labelSB.Append("\nΔx ");
+                            labelSB.AppendLine(delta.x.ToString("0.00"));
+                            labelSB.Append("Δy ");
+                            labelSB.AppendLine(delta.y.ToString("0.00"));
+                            labelSB.Append("Δz ");
+                            labelSB.Append(delta.z.ToString("0.00"));
+                            break;
+                        case RulerExDataMode.Angle:
+                            var angles = r.GetAngles(data.angleMode);
+                            switch (data.angleMode)
+                            {
+                                case RulerAngleMode.DirectionCosines:
+                                    labelSB.Append("\n∠α ");
+                                    labelSB.AppendLine(angles.x.ToString("0.00"));
+                                    labelSB.Append("∠β ");
+                                    labelSB.AppendLine(angles.y.ToString("0.00"));
+                                    labelSB.Append("∠γ ");
+                                    labelSB.Append(angles.z.ToString("0.00"));
+                                    break;
+
+                                case RulerAngleMode.PlaneProjection:
+                                    labelSB.Append("\n∠xy ");
+                                    labelSB.AppendLine(angles.x.ToString("0.00"));
+                                    labelSB.Append("∠yz ");
+                                    labelSB.AppendLine(angles.y.ToString("0.00"));
+                                    labelSB.Append("∠xz ");
+                                    labelSB.Append(angles.z.ToString("0.00"));
+                                    break;
+
+                                case RulerAngleMode.POV:
+                                    labelSB.Append("\n∠p ");
+                                    labelSB.AppendLine(angles.x.ToString("0.00"));
+                                    labelSB.Append("∠y ");
+                                    labelSB.AppendLine(angles.y.ToString("0.00"));
+                                    labelSB.Append("∠r ");
+                                    labelSB.Append(angles.z.ToString("0.00"));
+                                    break;
+                            }
+                            break;
+                    }
+                    Handles.Label(mag * 0.5f * n + r.a.position, labelSB.ToString(), labelStyle);
                 }
                 else
                 {
@@ -486,7 +668,6 @@ namespace Loqheart.Utility
             }
 
             Handles.color = oldColor;
-            GUI.backgroundColor = backgroundColor;
 
             SceneView.RepaintAll();
 
