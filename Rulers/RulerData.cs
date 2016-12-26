@@ -67,19 +67,19 @@ namespace Loqheart.Utility
             switch (mode)
             {
                 case RulerAngleMode.DirectionCosines:
-                    angles.x = Mathf.Acos(Vector3.Dot(unit, X));
-                    angles.y = Mathf.Acos(Vector3.Dot(unit, Y));
-                    angles.z = Mathf.Acos(Vector3.Dot(unit, Z));
+                    angles.x = Mathf.Acos(Mathf.Clamp(Vector3.Dot(unit, X), -1, 1));
+                    angles.y = Mathf.Acos(Mathf.Clamp(Vector3.Dot(unit, Y), -1, 1));
+                    angles.z = Mathf.Acos(Mathf.Clamp(Vector3.Dot(unit, Z), -1, 1));
                     angles = angles * Mathf.Rad2Deg;
                     break;
 
                 case RulerAngleMode.PlaneProjection:
                     var xy = new Vector3(unit.x, unit.y, 0f);
-                    angles.x = Mathf.Acos(Vector3.Dot(unit, xy));
+                    angles.x = Mathf.Acos(Mathf.Clamp(Vector3.Dot(unit, xy), -1, 1));
                     var yz = new Vector3(0f, unit.y, unit.z);
-                    angles.y = Mathf.Acos(Vector3.Dot(unit, yz));
+                    angles.y = Mathf.Acos(Mathf.Clamp(Vector3.Dot(unit, yz), -1, 1));
                     var xz = new Vector3(unit.x, 0f, unit.z);
-                    angles.z = Mathf.Acos(Vector3.Dot(unit, xz));
+                    angles.z = Mathf.Acos(Mathf.Clamp(Vector3.Dot(unit, xz), -1, 1));
                     angles = angles * Mathf.Rad2Deg;
                     break;
 
