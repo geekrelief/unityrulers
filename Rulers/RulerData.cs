@@ -74,17 +74,16 @@ namespace Loqheart.Utility
                     break;
 
                 case RulerAngleMode.PlaneProjection:
-                    var xy = new Vector3(unit.x, unit.y, 0f);
+                    var xy = (new Vector3(unit.x, unit.y, 0f)).normalized;
                     angles.x = Mathf.Acos(Mathf.Clamp(Vector3.Dot(unit, xy), -1, 1));
-                    var yz = new Vector3(0f, unit.y, unit.z);
+                    var yz = (new Vector3(0f, unit.y, unit.z)).normalized;
                     angles.y = Mathf.Acos(Mathf.Clamp(Vector3.Dot(unit, yz), -1, 1));
-                    var xz = new Vector3(unit.x, 0f, unit.z);
+                    var xz = (new Vector3(unit.x, 0f, unit.z)).normalized;
                     angles.z = Mathf.Acos(Mathf.Clamp(Vector3.Dot(unit, xz), -1, 1));
                     angles = angles * Mathf.Rad2Deg;
                     break;
 
                 case RulerAngleMode.POV:
-                    //angles = (Quaternion.Inverse(a.rotation) * Quaternion.LookRotation(unit, a.up)).eulerAngles;
                     angles = (Quaternion.Inverse(a.rotation) * Quaternion.LookRotation(unit, b.up)).eulerAngles;
                     if (angles.x > 180f)
                     {
