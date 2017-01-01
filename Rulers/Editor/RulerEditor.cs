@@ -714,8 +714,6 @@ namespace Loqheart.Utility
 
             if (r.isLocal)
             {
-                var fdot = Vector3.Dot(delta, r.a.forward);
-
                 // pitch
                 Handles.color = angleXColor;
                 Handles.DrawSolidArc(r.a.position, r.a.right, r.a.forward, angles.x, mag);
@@ -737,12 +735,9 @@ namespace Loqheart.Utility
             }
             else
             {
-                var fdot = delta.z;
-
                 // pitch
                 Handles.color = angleXColor;
                 Handles.DrawSolidArc(r.a.position, Vector3.right, Vector3.forward, angles.x, mag);
-
 
                 // yaw
                 Handles.color = angleYColor;
