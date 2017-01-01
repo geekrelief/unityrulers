@@ -22,12 +22,48 @@ namespace Loqheart.Utility
         string settingsStr = "Settings";
         string showTooltipsStr = "Tooltips";
         string enableShortcutsStr = "Shortcuts";
+        string precisionStr = "0.00";
+
+        // settings strings
+        string rulerThicknessStr = "ruler thickness";
+        string rulerColorStr = "ruler color";
+        string textSizeStr = "text size";
+        string textColorStr = "text color";
+        string displayPrecisionStr = "display precision";
+
+        string ButtonStr = "Button";
+        string filterStr = "filter";
+
+        // exdata strings
+        string deltaXStr = "Δx ";
+        string deltaYStr = "Δy ";
+        string deltaZStr = "Δz ";
+
+        string deltaRStr = "Δr ";
+        string deltaUStr = "Δu ";
+        string deltaFStr = "Δf ";
+
+        string angleEPStr = "∠p ";
+        string angleEYStr = "∠y ";
+        string angleERStr = "∠r ";
+
+        string nlStr = "\n";
+
+        Color distXColor = new Color(1f, 0f, 1f, 1f);
+        Color distYColor = new Color(1f, 1f, 0f, 1f);
+        Color distZColor = new Color(0f, 1f, 1f, 1f);
+
+        Color angleXColor = new Color(1f, 0f, 1f, 0.05f);
+        Color angleYColor = new Color(1f, 1f, 0f, 0.05f);
+        Color angleZColor = new Color(0f, 1f, 1f, 0.05f);
+
         GUIContent resetDataGC;
         GUIContent clearFilterGC;
-        GUIContent angleModeGC;
         GUIContent visibilityGC;
         GUIContent duplicateRulerGC;
 
+        GUIContent exDataIsLocalGC;
+        GUIContent exDataIsGlobalGC;
         GUIContent exDataDistanceGC;
         GUIContent exDataAngleGC;
 
@@ -50,8 +86,8 @@ namespace Loqheart.Utility
         GUIStyle labelStyle = new GUIStyle();
 
 
-        GUILayoutOption colorFieldWidth = GUILayout.Width(50);
-        GUILayoutOption exDataWidth = GUILayout.Width(75);
+        GUILayoutOption Width20 = GUILayout.Width(20);
+        GUILayoutOption Width50 = GUILayout.Width(50);
 
         bool showSettings = false;
         Vector2 scrollPos = Vector2.zero;
@@ -153,9 +189,10 @@ namespace Loqheart.Utility
             {
                 resetDataGC = new GUIContent("Reset Data", "Removes the rulers in the scene and resets settings.");
                 clearFilterGC = new GUIContent("x", "clear filter");
-                angleModeGC = new GUIContent("angle mode", "display angle information of ruler depending on mode");
                 visibilityGC = new GUIContent("", "visibility");
                 duplicateRulerGC = new GUIContent("★", "duplicate ruler");
+                exDataIsLocalGC = new GUIContent("L", "local coordinates");
+                exDataIsGlobalGC = new GUIContent("G", "global coordinates");
                 exDataDistanceGC = new GUIContent("Δ", "show component distances");
                 exDataAngleGC = new GUIContent("∠", "show component angles");
                 deleteRulerGC = new GUIContent("x", "delete ruler");
@@ -166,9 +203,10 @@ namespace Loqheart.Utility
             {
                 resetDataGC = new GUIContent("Reset Data");
                 clearFilterGC = new GUIContent("x");
-                angleModeGC = new GUIContent("angle mode", "");
                 visibilityGC = new GUIContent("");
                 duplicateRulerGC = new GUIContent("★");
+                exDataIsLocalGC = new GUIContent("L", "");
+                exDataIsGlobalGC = new GUIContent("G", "");
                 exDataDistanceGC = new GUIContent("Δ");
                 exDataAngleGC = new GUIContent("∠");
                 deleteRulerGC = new GUIContent("x");
@@ -225,6 +263,8 @@ namespace Loqheart.Utility
                 toggleStyle = new GUIStyle(EditorStyles.toggle);
                 toggleStyle.fixedWidth = 20;
 
+                precisionStr = "0." + new string('0', data.precision);
+
                 InstanceGUIContent();
             }
         }
@@ -261,15 +301,6 @@ namespace Loqheart.Utility
                 MarkDirty();
             }
         }
-
-        void CheckDirty(ref RulerAngleMode oldVal, RulerAngleMode newVal)
-        {
-            if (newVal != oldVal)
-            {
-                oldVal = newVal;
-                MarkDirty();
-            }
-        }
         #endregion Dirty
 
         void OnGUI()
@@ -285,8 +316,8 @@ namespace Loqheart.Utility
             if (showSettings)
             {
                 EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField(showTooltipsStr, GUILayout.Width(50));
-                var showTooltips = EditorGUILayout.Toggle(data.showTooltips, GUILayout.Width(50));
+                EditorGUILayout.LabelField(showTooltipsStr, Width50);
+                var showTooltips = EditorGUILayout.Toggle(data.showTooltips, Width50);
                 if (showTooltips != data.showTooltips)
                 {
                     data.showTooltips = showTooltips;
@@ -295,7 +326,7 @@ namespace Loqheart.Utility
                 }
 
                 EditorGUILayout.LabelField(enableShortcutsStr, GUILayout.Width(60));
-                var enableShortcuts = EditorGUILayout.Toggle(data.enableShortcuts, GUILayout.Width(50));
+                var enableShortcuts = EditorGUILayout.Toggle(data.enableShortcuts, Width50);
                 if (enableShortcuts != data.enableShortcuts)
                 {
                     data.enableShortcuts = enableShortcuts;
@@ -311,22 +342,27 @@ namespace Loqheart.Utility
 
                 EditorGUILayout.EndHorizontal();
 
-                EditorGUILayout.LabelField("ruler thickness");
+                EditorGUILayout.LabelField(rulerThicknessStr);
                 CheckDirty(ref data.rulerThickness, EditorGUILayout.IntSlider(data.rulerThickness, 1, 30));
 
-                EditorGUILayout.LabelField("ruler color");
+                EditorGUILayout.LabelField(rulerColorStr);
                 CheckDirty(ref data.rulerColor, EditorGUILayout.ColorField(data.rulerColor));
 
-                EditorGUILayout.LabelField("text size");
+                EditorGUILayout.LabelField(textSizeStr);
                 CheckDirty(ref data.fontSize, EditorGUILayout.IntSlider(data.fontSize, 4, 40));
                 labelStyle.fontSize = data.fontSize;
 
-                EditorGUILayout.LabelField("text color");
+                EditorGUILayout.LabelField(textColorStr);
                 CheckDirty(ref data.textColor, EditorGUILayout.ColorField(data.textColor));
                 labelStyle.normal.textColor = data.textColor;
 
-                EditorGUILayout.LabelField(angleModeGC);
-                CheckDirty(ref data.angleMode, (RulerAngleMode)EditorGUILayout.EnumPopup(data.angleMode));
+                EditorGUILayout.LabelField(displayPrecisionStr);
+                var oldPrecision = data.precision;
+                CheckDirty(ref data.precision, EditorGUILayout.IntSlider(data.precision, 1, 5));
+                if (data.precision != oldPrecision)
+                {
+                    precisionStr = "0." + new string('0', data.precision);
+                }
             }
 
             EditorGUILayout.EndVertical();
@@ -353,7 +389,7 @@ namespace Loqheart.Utility
             }
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("filter", GUILayout.Width(50));
+            EditorGUILayout.LabelField(filterStr, Width50);
             var filterTransform = (Transform)EditorGUILayout.ObjectField(data.filterTransform, typeof(Transform), true, GUILayout.ExpandWidth(true));
             if (filterTransform != data.filterTransform)
             {
@@ -361,7 +397,7 @@ namespace Loqheart.Utility
                 MarkDirty();
             }
 
-            if (GUILayout.Button(clearFilterGC, miniButtonStyle, GUILayout.Width(20)))
+            if (GUILayout.Button(clearFilterGC, miniButtonStyle, Width20))
             {
                 if (data.filterTransform != null)
                 {
@@ -389,68 +425,36 @@ namespace Loqheart.Utility
 
                 CheckDirty(ref r.isVisible, GUILayout.Toggle(r.isVisible, visibilityGC, toggleStyle));
 
-                if (GUILayout.Button(duplicateRulerGC, miniButtonStyle, GUILayout.Width(20)))
+                if (GUILayout.Button(duplicateRulerGC, miniButtonStyle, Width20))
                 {
                     duplicateRulerIndex = i;
                 }
 
-                CheckDirty(ref r.color, EditorGUILayout.ColorField(r.color, colorFieldWidth));
-                CheckDirty(ref r.textColor, EditorGUILayout.ColorField(r.textColor, colorFieldWidth));
+                CheckDirty(ref r.color, EditorGUILayout.ColorField(r.color, Width50));
+                CheckDirty(ref r.textColor, EditorGUILayout.ColorField(r.textColor, Width50));
 
-                var isSetExDataDistance = GUILayout.Toggle(RulerExDataMode.Distance == r.exDataMode, exDataDistanceGC, "Button");
-                if (isSetExDataDistance && r.exDataMode != RulerExDataMode.Distance)
+                if (GUILayout.Button(r.isLocal ? exDataIsLocalGC : exDataIsGlobalGC, Width20))
                 {
-                    r.exDataMode = RulerExDataMode.Distance;
+                    r.isLocal = !r.isLocal;
                     MarkDirty();
                 }
 
-                var isSetExDataAngle = GUILayout.Toggle(RulerExDataMode.Angle == r.exDataMode, exDataAngleGC, "Button");
-                if (isSetExDataAngle && r.exDataMode != RulerExDataMode.Angle)
+                var showExDist = GUILayout.Toggle(r.showExDist, exDataDistanceGC, ButtonStr);
+                if (showExDist != r.showExDist)
                 {
-                    r.exDataMode = RulerExDataMode.Angle;
+                    r.showExDist = showExDist;
                     MarkDirty();
                 }
 
-                if (!isSetExDataDistance && !isSetExDataAngle && r.exDataMode != RulerExDataMode.None)
+                var showExAngle = GUILayout.Toggle(r.showExAngle, exDataAngleGC, ButtonStr);
+                if (showExAngle != r.showExAngle)
                 {
-                    r.exDataMode = RulerExDataMode.None;
+                    r.showExAngle = showExAngle;
                     MarkDirty();
-                }
-
-                switch (r.exDataMode)
-                {
-                    case RulerExDataMode.Distance:
-                        var delta = r.delta;
-                        EditorGUILayout.LabelField("Δx " + delta.x.ToString("0.00"), boldStyle, exDataWidth);
-                        EditorGUILayout.LabelField("Δy " + delta.y.ToString("0.00"), boldStyle, exDataWidth);
-                        EditorGUILayout.LabelField("Δz" + delta.z.ToString("0.00"), boldStyle, exDataWidth);
-                        break;
-                    case RulerExDataMode.Angle:
-                        var angles = r.GetAngles(data.angleMode);
-                        switch (data.angleMode)
-                        {
-                            case RulerAngleMode.DirectionCosines:
-                                EditorGUILayout.LabelField("∠α " + angles.x.ToString("0.00"), boldStyle, exDataWidth);
-                                EditorGUILayout.LabelField("∠β " + angles.y.ToString("0.00"), boldStyle, exDataWidth);
-                                EditorGUILayout.LabelField("∠γ " + angles.z.ToString("0.00"), boldStyle, exDataWidth);
-
-                                break;
-                            case RulerAngleMode.PlaneProjection:
-                                EditorGUILayout.LabelField("∠xy " + angles.x.ToString("0.00"), boldStyle, exDataWidth);
-                                EditorGUILayout.LabelField("∠yz " + angles.y.ToString("0.00"), boldStyle, exDataWidth);
-                                EditorGUILayout.LabelField("∠xz " + angles.z.ToString("0.00"), boldStyle, exDataWidth);
-                                break;
-                            case RulerAngleMode.POV:
-                                EditorGUILayout.LabelField("∠p " + angles.x.ToString("0.00"), boldStyle, exDataWidth);
-                                EditorGUILayout.LabelField("∠y " + angles.y.ToString("0.00"), boldStyle, exDataWidth);
-                                EditorGUILayout.LabelField("∠r " + angles.z.ToString("0.00"), boldStyle, exDataWidth);
-                                break;
-                        }
-                        break;
                 }
 
                 GUILayout.FlexibleSpace();
-                if (GUILayout.Button(deleteRulerGC, miniButtonStyle, GUILayout.Width(20)))
+                if (GUILayout.Button(deleteRulerGC, miniButtonStyle, Width20))
                 {
                     removeRulerIndex = i;
                 }
@@ -458,7 +462,7 @@ namespace Loqheart.Utility
                 EditorGUILayout.EndHorizontal();
 
                 EditorGUILayout.BeginHorizontal();
-                if (GUILayout.Button(frameGC, miniButtonStyle, GUILayout.Width(20)))
+                if (GUILayout.Button(frameGC, miniButtonStyle, Width20))
                 {
                     // search for objects
                     selectedTransform = r.a;
@@ -469,12 +473,10 @@ namespace Loqheart.Utility
                     r.a = aTransform;
                     MarkDirty();
                 }
-                //EditorGUILayout.EndHorizontal();
 
-                EditorGUILayout.LabelField(r.delta.magnitude.ToString("0.00"), boldStyle, GUILayout.Width(40));
+                EditorGUILayout.LabelField(r.delta.magnitude.ToString(precisionStr), boldStyle, GUILayout.Width(40));
 
-                //EditorGUILayout.BeginHorizontal();
-                if (GUILayout.Button(frameGC, miniButtonStyle, GUILayout.Width(20)))
+                if (GUILayout.Button(frameGC, miniButtonStyle, Width20))
                 {
                     // search for objects
                     selectedTransform = r.b;
@@ -597,52 +599,12 @@ namespace Loqheart.Utility
                     labelStyle.normal.background.Apply();
 
                     var labelSB = new StringBuilder(64);
-                    labelSB.Append(mag.ToString("0.00"));
+                    labelSB.Append(mag.ToString(precisionStr));
 
-                    switch (r.exDataMode)
-                    {
-                        case RulerExDataMode.Distance:
-                            labelSB.Append("\nΔx ");
-                            labelSB.AppendLine(delta.x.ToString("0.00"));
-                            labelSB.Append("Δy ");
-                            labelSB.AppendLine(delta.y.ToString("0.00"));
-                            labelSB.Append("Δz ");
-                            labelSB.Append(delta.z.ToString("0.00"));
-                            break;
-                        case RulerExDataMode.Angle:
-                            var angles = r.GetAngles(data.angleMode);
-                            switch (data.angleMode)
-                            {
-                                case RulerAngleMode.DirectionCosines:
-                                    labelSB.Append("\n∠α ");
-                                    labelSB.AppendLine(angles.x.ToString("0.00"));
-                                    labelSB.Append("∠β ");
-                                    labelSB.AppendLine(angles.y.ToString("0.00"));
-                                    labelSB.Append("∠γ ");
-                                    labelSB.Append(angles.z.ToString("0.00"));
-                                    break;
+                    DrawExDist(r, labelSB);
+                    DrawExAngle(r, labelSB);
 
-                                case RulerAngleMode.PlaneProjection:
-                                    labelSB.Append("\n∠xy ");
-                                    labelSB.AppendLine(angles.x.ToString("0.00"));
-                                    labelSB.Append("∠yz ");
-                                    labelSB.AppendLine(angles.y.ToString("0.00"));
-                                    labelSB.Append("∠xz ");
-                                    labelSB.Append(angles.z.ToString("0.00"));
-                                    break;
-
-                                case RulerAngleMode.POV:
-                                    labelSB.Append("\n∠p ");
-                                    labelSB.AppendLine(angles.x.ToString("0.00"));
-                                    labelSB.Append("∠y ");
-                                    labelSB.AppendLine(angles.y.ToString("0.00"));
-                                    labelSB.Append("∠r ");
-                                    labelSB.Append(angles.z.ToString("0.00"));
-                                    break;
-                            }
-                            break;
-                    }
-                    Handles.Label(mag * 0.5f * n + r.a.position, labelSB.ToString(), labelStyle);
+                    Handles.Label(r.a.position + delta * 0.5f, labelSB.ToString(), labelStyle);
                 }
                 else
                 {
@@ -672,6 +634,132 @@ namespace Loqheart.Utility
             SceneView.RepaintAll();
 
             Repaint();
+        }
+
+        void DrawExDist(Ruler r, StringBuilder sb)
+        {
+            if (!r.showExDist) return;
+
+            var oldColor = Handles.color;
+            var delta = r.delta;
+
+            sb.Append(nlStr);
+
+            if (r.isLocal)
+            {
+                var rdot = Vector3.Dot(delta, r.a.right);
+                var udot = Vector3.Dot(delta, r.a.up);
+                var fdot = Vector3.Dot(delta, r.a.forward);
+                var rproj = rdot * r.a.right;
+                var uproj = udot * r.a.up;
+                var fproj = fdot * r.a.forward;
+
+                //right
+                Handles.color = distXColor;
+                Handles.DrawLine(r.a.position, r.a.position + rproj);
+
+                // up
+                Handles.color = distYColor;
+                Handles.DrawLine(r.a.position + rproj + fproj, r.a.position + rproj + fproj + uproj);
+
+                // forward
+                Handles.color = distZColor;
+                Handles.DrawLine(r.a.position + rproj, r.a.position + rproj + fproj);
+
+                sb.Append(deltaRStr);
+                sb.AppendLine((rdot < 0 ? "-" : "") + rproj.magnitude.ToString(precisionStr));
+                sb.Append(deltaUStr);
+                sb.AppendLine((udot < 0 ? "-" : "") + uproj.magnitude.ToString(precisionStr));
+                sb.Append(deltaFStr);
+                sb.Append((fdot < 0 ? "-" : "") + fproj.magnitude.ToString(precisionStr));
+
+            }
+            else
+            {
+                var rproj = new Vector3(delta.x, 0f, 0f);
+                var uproj = new Vector3(0f, delta.y, 0f);
+                var fproj = new Vector3(0f, 0f, delta.z);
+
+                //right
+                Handles.color = distXColor;
+                Handles.DrawLine(r.a.position, r.a.position + rproj);
+
+                // up
+                Handles.color = distYColor;
+                Handles.DrawLine(r.a.position + rproj + fproj, r.a.position + rproj + fproj + uproj);
+
+                // forward
+                Handles.color = distZColor;
+                Handles.DrawLine(r.a.position + rproj, r.a.position + rproj + fproj);
+
+                sb.Append(deltaXStr);
+                sb.AppendLine(delta.x.ToString(precisionStr));
+                sb.Append(deltaYStr);
+                sb.AppendLine(delta.y.ToString(precisionStr));
+                sb.Append(deltaZStr);
+                sb.Append(delta.z.ToString(precisionStr));
+            }
+            Handles.color = oldColor;
+        }
+
+        void DrawExAngle(Ruler r, StringBuilder sb)
+        {
+            if (!r.showExAngle) return;
+            var oldColor = Handles.color;
+            var delta = r.delta;
+            var angles = r.GetAngles();
+            var mag = delta.magnitude;
+
+            sb.Append(nlStr);
+
+            if (r.isLocal)
+            {
+                var fdot = Vector3.Dot(delta, r.a.forward);
+
+                // pitch
+                Handles.color = angleXColor;
+                Handles.DrawSolidArc(r.a.position, r.a.right, r.a.forward, angles.x, mag);
+
+                // yaw
+                Handles.color = angleYColor;
+                Handles.DrawSolidArc(r.a.position, r.a.up, r.a.forward, angles.y, mag);
+
+                // roll
+                Handles.color = angleZColor;
+                Handles.DrawSolidArc(r.a.position, r.a.forward, r.a.right, angles.z, mag);
+
+                sb.Append(angleEPStr);
+                sb.AppendLine(angles.x.ToString(precisionStr));
+                sb.Append(angleEYStr);
+                sb.AppendLine(angles.y.ToString(precisionStr));
+                sb.Append(angleERStr);
+                sb.Append(angles.z.ToString(precisionStr));
+            }
+            else
+            {
+                var fdot = delta.z;
+
+                // pitch
+                Handles.color = angleXColor;
+                Handles.DrawSolidArc(r.a.position, Vector3.right, Vector3.forward, angles.x, mag);
+
+
+                // yaw
+                Handles.color = angleYColor;
+                Handles.DrawSolidArc(r.a.position, Vector3.up, Vector3.forward, angles.y, mag);
+
+                // roll
+                Handles.color = angleZColor;
+                Handles.DrawSolidArc(r.a.position, Vector3.forward, Vector3.right, angles.z, mag);
+
+                sb.Append(angleEPStr);
+                sb.AppendLine(angles.x.ToString(precisionStr));
+                sb.Append(angleEYStr);
+                sb.AppendLine(angles.y.ToString(precisionStr));
+                sb.Append(angleERStr);
+                sb.Append(angles.z.ToString(precisionStr));
+            }
+            Handles.color = oldColor;
         }
     }
 }
