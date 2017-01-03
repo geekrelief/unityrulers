@@ -116,10 +116,10 @@ namespace Loqheart.Utility
             {
                 currentScene = EditorSceneManager.GetActiveScene();
                 data = null;
-                selectionSet = null;
-                newSet = null;
-                deleteSet = null;
-                selectionOrdered = null;
+                selectionSet.Clear();
+                newSet.Clear();
+                deleteSet.Clear();
+                selectionOrdered.Clear();
                 CheckInit();
             }
         }
