@@ -26,6 +26,7 @@ namespace Loqheart.Utility
 
         // settings strings
         string rulerThicknessStr = "ruler thickness";
+        string pointsThicknessStr = "points thickness";
         string rulerColorStr = "ruler color";
         string textSizeStr = "text size";
         string textColorStr = "text color";
@@ -329,6 +330,9 @@ namespace Loqheart.Utility
                 EditorGUILayout.LabelField(rulerThicknessStr);
                 CheckDirty(ref data.rulerThickness, EditorGUILayout.IntSlider(data.rulerThickness, 1, 30));
 
+                EditorGUILayout.LabelField(rulerThicknessStr);
+                CheckDirty(ref data.pointThickness, EditorGUILayout.IntSlider(data.pointThickness, 0, 100));
+
                 EditorGUILayout.LabelField(rulerColorStr);
                 CheckDirty(ref data.rulerColor, EditorGUILayout.ColorField(data.rulerColor));
 
@@ -571,7 +575,7 @@ namespace Loqheart.Utility
                 if (r.a != null && r.b != null)
                 {
                     Handles.DrawAAPolyLine(data.rulerThickness, new Vector3[] { r.a.position, r.b.position });
-                    Handles.SphereCap(controlId, r.a.position, r.a.rotation, 0.25f);
+                    Handles.SphereCap(controlId, r.a.position, r.a.rotation, (float)data.pointThickness / 100f);
 
                     Vector3 delta = r.delta;
                     float mag = delta.magnitude;
