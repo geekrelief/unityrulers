@@ -275,27 +275,9 @@ namespace Loqheart.Utility
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         }
 
-        void CheckDirty(ref int oldVal, int newVal)
+        void CheckDirty<T>(ref T oldVal, T newVal) where T:struct
         {
-            if (newVal != oldVal)
-            {
-                oldVal = newVal;
-                MarkDirty();
-            }
-        }
-
-        void CheckDirty(ref Color oldVal, Color newVal)
-        {
-            if (newVal != oldVal)
-            {
-                oldVal = newVal;
-                MarkDirty();
-            }
-        }
-
-        void CheckDirty(ref bool oldVal, bool newVal)
-        {
-            if (newVal != oldVal)
+            if (!newVal.Equals(oldVal))
             {
                 oldVal = newVal;
                 MarkDirty();
