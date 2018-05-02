@@ -287,6 +287,7 @@ namespace Loqheart.Utility
                 MarkDirty();
             }
         }
+
         #endregion Dirty
 
         void OnGUI()
@@ -333,6 +334,9 @@ namespace Loqheart.Utility
 
                 EditorGUILayout.LabelField(pointThicknessStr);
                 CheckDirty(ref data.pointThickness, EditorGUILayout.IntSlider(data.pointThickness, 0, 100));
+
+                EditorGUILayout.LabelField(arrowThicknessStr);
+                CheckDirty(ref data.arrowThickness, EditorGUILayout.IntSlider(data.arrowThickness, 0, 50));
 
                 EditorGUILayout.LabelField(rulerColorStr);
                 CheckDirty(ref data.rulerColor, EditorGUILayout.ColorField(data.rulerColor));
@@ -581,7 +585,8 @@ namespace Loqheart.Utility
                     Vector3 delta = r.delta;
                     float mag = delta.magnitude;
                     var n = delta.normalized;
-                    Handles.ArrowCap(controlId + 1, r.b.position - 1.14f * n, mag < 0.0001f ? Quaternion.identity : Quaternion.LookRotation(delta), 1f);
+                    float ArrowSize = (float)data.arrowThickness / 10f;
+                    Handles.ArrowCap(controlId + 1, r.b.position - n * ArrowSize * 1.14f, mag < 0.0001f ? Quaternion.identity : Quaternion.LookRotation(delta), ArrowSize);
 
                     labelStyle.normal.textColor = r.textColor;
                     labelStyle.normal.background.SetPixel(0, 0, new Color(r.color.r, r.color.g, r.color.b, 0.5f));

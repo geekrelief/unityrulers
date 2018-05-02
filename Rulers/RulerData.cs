@@ -89,6 +89,7 @@ namespace Loqheart.Utility
         public Color rulerColor = new Color(1f, .75f, 0f);
         public int rulerThickness = 2;
         public int pointThickness = 25;
+        public int arrowThickness = 10;
         public int precision = 2;
 
         public Transform filterTransform;
