@@ -227,7 +227,8 @@ namespace Loqheart.Utility
                     rulerGameObject.hideFlags = HideFlags.DontUnloadUnusedAsset | HideFlags.DontSaveInBuild;
                     data = rulerGameObject.AddComponent<RulerData>();
 
-                    EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+                    if (!Application.isPlaying)
+                        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
                 }
                 else
                 {
@@ -272,7 +273,8 @@ namespace Loqheart.Utility
         #region Dirty
         void MarkDirty()
         {
-            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+            if (!Application.isPlaying)
+                EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         }
 
         void CheckDirty<T>(ref T oldVal, T newVal) where T:struct
