@@ -26,6 +26,8 @@ namespace Loqheart.Utility
 
         // settings strings
         string rulerThicknessStr = "ruler thickness";
+        string pointThicknessStr = "point thickness";
+        string arrowThicknessStr = "arrow thickness";
         string rulerColorStr = "ruler color";
         string textSizeStr = "text size";
         string textColorStr = "text color";
@@ -227,7 +229,8 @@ namespace Loqheart.Utility
                     rulerGameObject.hideFlags = HideFlags.DontUnloadUnusedAsset | HideFlags.DontSaveInBuild;
                     data = rulerGameObject.AddComponent<RulerData>();
 
-                    EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+                    if (!Application.isPlaying)
+                        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
                 }
                 else
                 {
@@ -272,35 +275,19 @@ namespace Loqheart.Utility
         #region Dirty
         void MarkDirty()
         {
-            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+            if (!Application.isPlaying)
+                EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         }
 
-        void CheckDirty(ref int oldVal, int newVal)
+        void CheckDirty<T>(ref T oldVal, T newVal) where T:struct
         {
-            if (newVal != oldVal)
+            if (!newVal.Equals(oldVal))
             {
                 oldVal = newVal;
                 MarkDirty();
             }
         }
 
-        void CheckDirty(ref Color oldVal, Color newVal)
-        {
-            if (newVal != oldVal)
-            {
-                oldVal = newVal;
-                MarkDirty();
-            }
-        }
-
-        void CheckDirty(ref bool oldVal, bool newVal)
-        {
-            if (newVal != oldVal)
-            {
-                oldVal = newVal;
-                MarkDirty();
-            }
-        }
         #endregion Dirty
 
         void OnGUI()
@@ -344,6 +331,12 @@ namespace Loqheart.Utility
 
                 EditorGUILayout.LabelField(rulerThicknessStr);
                 CheckDirty(ref data.rulerThickness, EditorGUILayout.IntSlider(data.rulerThickness, 1, 30));
+
+                EditorGUILayout.LabelField(pointThicknessStr);
+                CheckDirty(ref data.pointThickness, EditorGUILayout.IntSlider(data.pointThickness, 0, 100));
+
+                EditorGUILayout.LabelField(arrowThicknessStr);
+                CheckDirty(ref data.arrowThickness, EditorGUILayout.IntSlider(data.arrowThickness, 0, 50));
 
                 EditorGUILayout.LabelField(rulerColorStr);
                 CheckDirty(ref data.rulerColor, EditorGUILayout.ColorField(data.rulerColor));
@@ -587,12 +580,13 @@ namespace Loqheart.Utility
                 if (r.a != null && r.b != null)
                 {
                     Handles.DrawAAPolyLine(data.rulerThickness, new Vector3[] { r.a.position, r.b.position });
-                    Handles.SphereCap(controlId, r.a.position, r.a.rotation, 0.25f);
+                    Handles.SphereCap(controlId, r.a.position, r.a.rotation, (float)data.pointThickness / 100f);
 
                     Vector3 delta = r.delta;
                     float mag = delta.magnitude;
                     var n = delta.normalized;
-                    Handles.ArrowCap(controlId + 1, r.b.position - 1.14f * n, mag < 0.0001f ? Quaternion.identity : Quaternion.LookRotation(delta), 1f);
+                    float ArrowSize = (float)data.arrowThickness / 10f;
+                    Handles.ArrowCap(controlId + 1, r.b.position - n * ArrowSize * 1.14f, mag < 0.0001f ? Quaternion.identity : Quaternion.LookRotation(delta), ArrowSize);
 
                     labelStyle.normal.textColor = r.textColor;
                     labelStyle.normal.background.SetPixel(0, 0, new Color(r.color.r, r.color.g, r.color.b, 0.5f));
