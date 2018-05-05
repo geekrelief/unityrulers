@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -36,7 +37,7 @@ namespace Loqheart.Utility
         string ButtonStr = "Button";
         string filterStr = "filter";
 
-        // exdata strings
+        // exdata strings for display in scene view
         string deltaXStr = "Δx ";
         string deltaYStr = "Δy ";
         string deltaZStr = "Δz ";
@@ -91,6 +92,7 @@ namespace Loqheart.Utility
         GUILayoutOption Width20 = GUILayout.Width(20);
         GUILayoutOption Width50 = GUILayout.Width(50);
 
+        // State vars
         bool showSettings = false;
         Vector2 scrollPos = Vector2.zero;
         Transform selectedTransform;
@@ -168,6 +170,16 @@ namespace Loqheart.Utility
             newSet = new HashSet<GameObject>();
             deleteSet = new HashSet<GameObject>();
             selectionOrdered = new List<GameObject>();
+        }
+
+        void OnLostFocus()
+        {
+            // reset editing of rulers
+            for (int i = 0; i < data.rulers.Length; ++i)
+            {
+                var r = data.rulers[i];
+                r.isEditingDistance = false;
+            }
         }
 
         void ResetData()
@@ -468,7 +480,51 @@ namespace Loqheart.Utility
                     MarkDirty();
                 }
 
-                EditorGUILayout.LabelField(r.delta.magnitude.ToString(precisionStr), boldStyle, GUILayout.Width(40));
+                #region distance editor
+                if (r.isDistanceNonzero)
+                {
+                    if (r.isEditingDistance)
+                    {
+                        GUI.SetNextControlName("deltaEditor");
+                        var oldDistStr = r.delta.magnitude.ToString();
+                        var newDistStr = EditorGUILayout.TextField(oldDistStr, GUILayout.Width(40));
+                        newDistStr = Regex.Replace(newDistStr, @"[^0-9.-]", ""); // filter for real numbers only
+
+                        if (oldDistStr != newDistStr)
+                        {
+                            float newDist = 0f;
+                            try {
+                                newDist = float.Parse(newDistStr);
+                            } catch(FormatException e) {
+                                // ignore
+                            }
+                            if (newDist != 0f)
+                            {
+                                var newDelta = r.delta.normalized * newDist;
+                                r.b.position = r.a.position + newDelta;
+                                MarkDirty();
+                            }
+                        }
+
+                        if (Event.current.isKey && Event.current.keyCode == KeyCode.Return && GUI.GetNameOfFocusedControl() == "deltaEditor")
+                        {
+                            r.isEditingDistance = false;
+                        }
+                    }
+                    else
+                    {
+                        if (GUILayout.Button(r.delta.magnitude.ToString(precisionStr), boldStyle, GUILayout.Width(40)))
+                        {
+                            r.isEditingDistance = true;
+                        }
+                    }
+                }
+                else
+                {
+                    r.isEditingDistance = false;
+                    EditorGUILayout.LabelField(r.delta.magnitude.ToString(precisionStr), EditorStyles.label, GUILayout.Width(40));
+                }
+                #endregion delta editor
 
                 if (GUILayout.Button(frameGC, miniButtonStyle, Width20))
                 {
