@@ -26,8 +26,8 @@ namespace Loqheart.Utility
 
         // settings strings
         string rulerThicknessStr = "ruler thickness";
-        string pointThicknessStr = "point thickness";
-        string arrowThicknessStr = "arrow thickness";
+        string pointSizeStr = "point size";
+        string arrowSizeStr = "arrow size";
         string rulerColorStr = "ruler color";
         string textSizeStr = "text size";
         string textColorStr = "text color";
@@ -332,11 +332,11 @@ namespace Loqheart.Utility
                 EditorGUILayout.LabelField(rulerThicknessStr);
                 CheckDirty(ref data.rulerThickness, EditorGUILayout.IntSlider(data.rulerThickness, 1, 30));
 
-                EditorGUILayout.LabelField(pointThicknessStr);
-                CheckDirty(ref data.pointThickness, EditorGUILayout.IntSlider(data.pointThickness, 0, 100));
+                EditorGUILayout.LabelField(pointSizeStr);
+                CheckDirty(ref data.pointSize, EditorGUILayout.IntSlider(data.pointSize, 0, 100));
 
-                EditorGUILayout.LabelField(arrowThicknessStr);
-                CheckDirty(ref data.arrowThickness, EditorGUILayout.IntSlider(data.arrowThickness, 0, 50));
+                EditorGUILayout.LabelField(arrowSizeStr);
+                CheckDirty(ref data.arrowSize, EditorGUILayout.IntSlider(data.arrowSize, 0, 50));
 
                 EditorGUILayout.LabelField(rulerColorStr);
                 CheckDirty(ref data.rulerColor, EditorGUILayout.ColorField(data.rulerColor));
@@ -550,6 +550,11 @@ namespace Loqheart.Utility
 
         void OnSceneGUI(SceneView sceneView)
         {
+            if (Event.current.type != EventType.Repaint)
+            {
+                return;
+            }
+
             CheckInit();
 
             CheckShortcuts();
@@ -580,13 +585,19 @@ namespace Loqheart.Utility
                 if (r.a != null && r.b != null)
                 {
                     Handles.DrawAAPolyLine(data.rulerThickness, new Vector3[] { r.a.position, r.b.position });
-                    Handles.SphereCap(controlId, r.a.position, r.a.rotation, (float)data.pointThickness / 100f);
+                    Handles.SphereHandleCap(controlId, r.a.position, r.a.rotation, 
+                        HandleUtility.GetHandleSize(r.a.position) * data.pointSize / 100f, 
+                        EventType.Repaint);
+
 
                     Vector3 delta = r.delta;
                     float mag = delta.magnitude;
                     var n = delta.normalized;
-                    float ArrowSize = (float)data.arrowThickness / 10f;
-                    Handles.ArrowCap(controlId + 1, r.b.position - n * ArrowSize * 1.14f, mag < 0.0001f ? Quaternion.identity : Quaternion.LookRotation(delta), ArrowSize);
+
+                    float arrowSize = HandleUtility.GetHandleSize(r.b.position) * data.arrowSize / 25f;
+                    Handles.ConeHandleCap(controlId + 1, r.b.position - n * arrowSize/1.43f, 
+                        mag < 0.0001f ? Quaternion.identity : Quaternion.LookRotation(delta), 
+                        arrowSize, EventType.Repaint);
 
                     labelStyle.normal.textColor = r.textColor;
                     labelStyle.normal.background.SetPixel(0, 0, new Color(r.color.r, r.color.g, r.color.b, 0.5f));
@@ -599,26 +610,6 @@ namespace Loqheart.Utility
                     DrawExAngle(r, labelSB);
 
                     Handles.Label(r.a.position + delta * 0.5f, labelSB.ToString(), labelStyle);
-                }
-                else
-                {
-                    if (r.a == null)
-                    {
-                        Handles.SphereCap(controlId, Vector3.zero, Quaternion.identity, 0.25f);
-                    }
-                    else
-                    {
-                        Handles.SphereCap(controlId, r.a.position, Quaternion.identity, 0.25f);
-                    }
-
-                    if (r.b == null)
-                    {
-                        Handles.ArrowCap(controlId + 1, Vector3.zero, Quaternion.identity, 1f);
-                    }
-                    else
-                    {
-                        Handles.ArrowCap(controlId + 1, r.b.position, Quaternion.identity, 1f);
-                    }
                 }
                 controlId += 2;
             }
