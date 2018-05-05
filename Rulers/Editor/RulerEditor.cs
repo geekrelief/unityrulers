@@ -402,6 +402,7 @@ namespace Loqheart.Utility
             EditorGUILayout.EndHorizontal();
             #endregion filter
 
+            #region ruler
             EditorGUILayout.BeginVertical();
             int removeRulerIndex = -1;
             int duplicateRulerIndex = -1;
@@ -485,6 +486,7 @@ namespace Loqheart.Utility
 
                 EditorGUILayout.EndVertical();
             }
+            #endregion ruler
 
             if (duplicateRulerIndex != -1)
             {
