@@ -16,6 +16,7 @@ namespace Loqheart.Utility
         public bool isLocal = false;
         public bool showExDist = false;
         public bool showExAngle = false;
+        public bool isEditingDistance = false;
 
         public Ruler()
         {
@@ -41,6 +42,14 @@ namespace Loqheart.Utility
                 {
                     return Vector3.zero;
                 }
+            }
+        }
+
+        public bool isDistanceNonzero
+        {
+            get
+            {
+                return isValid && delta.sqrMagnitude > 0f;
             }
         }
 
