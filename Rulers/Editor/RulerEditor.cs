@@ -152,7 +152,11 @@ namespace Loqheart.Utility
 
         private void OnDestroy()
         {
+#if UNITY_2019_1_OR_NEWER
+            SceneView.duringSceneGui -= OnSceneGUI;
+#else
             SceneView.onSceneGUIDelegate -= OnSceneGUI;
+#endif
             data = null;
 
             selectionSet = null;
@@ -164,7 +168,11 @@ namespace Loqheart.Utility
         void OnEnable()
         {
             currentScene = EditorSceneManager.GetActiveScene();
+#if UNITY_2019_1_OR_NEWER
+            SceneView.duringSceneGui += OnSceneGUI;
+#else
             SceneView.onSceneGUIDelegate += OnSceneGUI;
+#endif
             titleContent = new GUIContent("Rulers");
             selectionSet = new HashSet<GameObject>();
             newSet = new HashSet<GameObject>();
